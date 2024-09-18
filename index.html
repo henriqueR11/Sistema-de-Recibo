@@ -40,7 +40,7 @@
         font-size: 0.9rem;
         padding: 0.5rem 0.75rem;
       }
-      #mainForm{
+      #mainForm {
         padding: 10px;
         margin: 8px;
       }
@@ -445,6 +445,18 @@
 
     // Inicialmente, exibir a página de gerar recibo
     mostrarPagina('gerarRecibo');
+
+    // Função para ativar o toggle no navbar
+    document.addEventListener('DOMContentLoaded', () => {
+      // Ativar o toggle do menu no mobile
+      const burger = document.querySelector('.navbar-burger');
+      const menu = document.querySelector('#navbarBasicExample');
+
+      burger.addEventListener('click', () => {
+        burger.classList.toggle('is-active');
+        menu.classList.toggle('is-active');
+      });
+    });
   </script>
 </body>
 </html>
