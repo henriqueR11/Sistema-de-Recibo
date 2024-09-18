@@ -8,9 +8,10 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
   <!-- Google Fonts - Poppins -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Inputmask -->
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.7/jquery.inputmask.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/5.0.6/jquery.inputmask.min.js"></script>
   <style>
     body {
       font-family: 'Poppins', sans-serif;
@@ -19,10 +20,35 @@
       display: none;
     }
     h2 {
-      font-size: 2rem;
+      font-size: 1.8rem;
     }
     .table-container {
       margin-top: 2rem;
+    }
+    /* Ajustes para responsividade */
+    @media (max-width: 768px) {
+      h2 {
+        font-size: 1.4rem;
+      }
+      h4 {
+        font-size: 1.2rem;
+      }
+      .table {
+        font-size: 0.9rem;
+      }
+      .button {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+      }
+      #mainForm{
+        padding: 10px;
+        margin: 8px;
+      }
+    }
+    /* Ajustes para o gráfico responsivo */
+    #graficoRecibos {
+      width: 100% !important;
+      height: auto !important;
     }
   </style>
 </head>
@@ -48,7 +74,7 @@
   </nav>
 
   <!-- Conteúdo principal -->
-  <div class="container mt-5">
+  <div class="container mt-5" id="mainForm">
     
     <!-- Seção de Gerar Recibo -->
     <div id="gerarReciboSection">
@@ -184,36 +210,24 @@
   <!-- jsPDF e autoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
-  <!-- Bulma JS para menu mobile -->
+  <!-- Inputmask.js para formatação -->
   <script>
-    // Menu mobile do Bulma
-    document.addEventListener('DOMContentLoaded', () => {
-      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
-      if ($navbarBurgers.length > 0) {
-        $navbarBurgers.forEach(el => {
-          el.addEventListener('click', () => {
-            const target = el.dataset.target;
-            const $target = document.getElementById(target);
-            el.classList.toggle('is-active');
-            $target.classList.toggle('is-active');
-          });
-        });
-      }
+    $(document).ready(function(){
+      // Aplicar máscara para CPF (000.000.000-00)
+      $("#cpfCliente").inputmask("999.999.999-99");
 
-      // Máscara para o CPF (formato: 999.999.999-99)
-      $("#cpfCliente").inputmask({
-        mask: "999.999.999-99",
-        placeholder: "___.___.___-__",
-        showMaskOnHover: false,
-        clearIncomplete: true
-      });
+      // Aplicar máscara para telefone (00) 00000-0000
+      $("#telefoneCliente").inputmask("(99) 99999-9999");
 
-      // Máscara para o Telefone (formato: (99) 99999-9999)
-      $("#telefoneCliente").inputmask({
-        mask: "(99) 99999-9999",
-        placeholder: "(__) _____-____",
-        showMaskOnHover: false,
-        clearIncomplete: true
+      // Aplicar máscara para valores monetários (R$ 0.000,00)
+      $(".product-value").inputmask({
+        alias: "currency",
+        prefix: "R$ ",
+        groupSeparator: ".",
+        radixPoint: ",",
+        digits: 2,
+        digitsOptional: false,
+        rightAlign: false
       });
     });
 
@@ -290,6 +304,7 @@
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           scales: {
             x: {
               title: {
