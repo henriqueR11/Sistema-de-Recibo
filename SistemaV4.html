@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Recibos com Dashboard</title>
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  <!-- Google Fonts - Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+    .hidden {
+      display: none;
+    }
+    h2 {
+      font-size: 2rem;
+    }
+    .table-container {
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Menu de navegação -->
+  <nav class="navbar is-light" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="#">Gerador de Recibos</a>
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" id="linkGerarRecibo">Gerar Recibo</a>
+        <a class="navbar-item" id="linkHistorico">Histórico</a>
+        <a class="navbar-item" id="linkMetricas">Métricas</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Conteúdo principal -->
+  <div class="container mt-5">
+    
+    <!-- Seção de Gerar Recibo -->
+    <div id="gerarReciboSection">
+      <h2 class="title is-3 has-text-centered">Gerar Recibo</h2>
+      <form id="reciboForm">
+        <div class="field">
+          <label class="label" for="nomeCliente">Nome do Cliente</label>
+          <div class="control">
+            <input class="input" type="text" id="nomeCliente" placeholder="Nome do Cliente" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="cpfCliente">CPF do Cliente</label>
+          <div class="control">
+            <input class="input" type="text" id="cpfCliente" placeholder="CPF do Cliente" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="telefoneCliente">Telefone do Cliente</label>
+          <div class="control">
+            <input class="input" type="text" id="telefoneCliente" placeholder="Telefone do Cliente" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label" for="dataRecibo">Data</label>
+          <div class="control">
+            <input class="input" type="date" id="dataRecibo" required>
+          </div>
+        </div>
+
+        <!-- Checkboxes para "Topo de Bolo" e "Entrega" -->
+        <div class="field">
+          <div class="control">
+            <label class="checkbox">
+              <input type="checkbox" id="topoBolo">
+              Topo de Bolo (+ R$25)
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <div class="control">
+            <label class="checkbox">
+              <input type="checkbox" id="entrega">
+              Entrega (+ R$35)
+            </label>
+          </div>
+        </div>
+
+        <!-- Campos para adicionar produtos -->
+        <h4 class="title is-4">Adicionar Produtos</h4>
+        <div id="productList">
+          <div class="columns is-mobile">
+            <div class="column">
+              <input class="input" type="text" placeholder="Produto" required>
+            </div>
+            <div class="column">
+              <input class="input" type="number" placeholder="Quantidade" required>
+            </div>
+            <div class="column">
+              <input class="input product-value" type="text" placeholder="Valor (R$)" required>
+            </div>
+            <div class="column is-narrow">
+              <button type="button" class="button is-success add-product">Adicionar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de produtos adicionados -->
+        <div class="table-container">
+          <table class="table is-fullwidth is-striped is-hoverable">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Quantidade</th>
+                <th>Valor Unitário</th>
+                <th>Valor Total</th>
+              </tr>
+            </thead>
+            <tbody id="productsTable">
+              <!-- Produtos adicionados vão aqui -->
+            </tbody>
+          </table>
+        </div>
+
+        <button type="submit" class="button is-primary is-fullwidth">Gerar Recibo</button>
+      </form>
+    </div>
+
+    <!-- Seção de Histórico -->
+    <div id="historicoSection" class="hidden">
+      <h2 class="title is-3 has-text-centered">Histórico de Recibos</h2>
+      <div class="table-container">
+        <table class="table is-fullwidth is-striped is-hoverable">
+          <thead>
+            <tr>
+              <th>Nome do Cliente</th>
+              <th>Data</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody id="historicoTableBody">
+            <!-- Registros de recibos serão adicionados aqui -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Seção de Métricas -->
+    <div id="metricasSection" class="hidden">
+      <h2 class="title is-3 has-text-centered">Métricas de Recibos</h2>
+      <div class="columns">
+        <div class="column">
+          <div class="box">
+            <p class="title is-4">Total de Recibos Gerados</p>
+            <p class="subtitle is-2" id="totalRecibos">0</p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="box">
+            <p class="title is-4">Soma Total dos Valores</p>
+            <p class="subtitle is-2">R$ <span id="somaValores">0,00</span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="box">
+        <canvas id="graficoRecibos"></canvas>
+      </div>
+    </div>
+    
+  </div>
+
+  <!-- jsPDF e autoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+  <!-- Bulma JS para menu mobile -->
+  <script>
+    // Menu mobile do Bulma
+    document.addEventListener('DOMContentLoaded', () => {
+      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+      if ($navbarBurgers.length > 0) {
+        $navbarBurgers.forEach(el => {
+          el.addEventListener('click', () => {
+            const target = el.dataset.target;
+            const $target = document.getElementById(target);
+            el.classList.toggle('is-active');
+            $target.classList.toggle('is-active');
+          });
+        });
+      }
+    });
+
+    // Variável para armazenar os recibos no localStorage como um banco de dados
+    let bancoRecibos = JSON.parse(localStorage.getItem('bancoRecibos')) || [];
+
+    // Função para alternar entre as páginas
+    function mostrarPagina(pagina) {
+      document.getElementById('gerarReciboSection').classList.add('hidden');
+      document.getElementById('historicoSection').classList.add('hidden');
+      document.getElementById('metricasSection').classList.add('hidden');
+      if (pagina === 'gerarRecibo') {
+        document.getElementById('gerarReciboSection').classList.remove('hidden');
+      } else if (pagina === 'historico') {
+        document.getElementById('historicoSection').classList.remove('hidden');
+        carregarHistorico();
+      } else if (pagina === 'metricas') {
+        document.getElementById('metricasSection').classList.remove('hidden');
+        carregarMetricas();
+      }
+    }
+
+    // Alternar entre as páginas ao clicar nos links do menu
+    document.getElementById('linkGerarRecibo').addEventListener('click', function() {
+      mostrarPagina('gerarRecibo');
+    });
+    document.getElementById('linkHistorico').addEventListener('click', function() {
+      mostrarPagina('historico');
+    });
+    document.getElementById('linkMetricas').addEventListener('click', function() {
+      mostrarPagina('metricas');
+    });
+
+    // Função para carregar o histórico de recibos na tabela
+    function carregarHistorico() {
+      const historicoTableBody = document.getElementById('historicoTableBody');
+      historicoTableBody.innerHTML = '';
+      bancoRecibos.forEach(recibo => {
+        const row = `<tr>
+          <td>${recibo.nomeCliente}</td>
+          <td>${recibo.data}</td>
+          <td>R$ ${recibo.valor}</td>
+        </tr>`;
+        historicoTableBody.innerHTML += row;
+      });
+    }
+
+    // Função para carregar métricas
+    function carregarMetricas() {
+      // Total de recibos
+      const totalRecibos = bancoRecibos.length;
+      document.getElementById('totalRecibos').textContent = totalRecibos;
+
+      // Soma dos valores
+      const somaValores = bancoRecibos.reduce((sum, recibo) => sum + parseFloat(recibo.valor), 0).toFixed(2);
+      document.getElementById('somaValores').textContent = somaValores;
+
+      // Gerar gráfico de recibos por data
+      const datas = bancoRecibos.map(recibo => recibo.data);
+      const valores = bancoRecibos.map(recibo => parseFloat(recibo.valor));
+
+      const ctx = document.getElementById('graficoRecibos').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: datas,
+          datasets: [{
+            label: 'Valores dos Recibos',
+            data: valores,
+            borderColor: '#ff3690',
+            fill: false,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Data'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Valor (R$)'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Função para adicionar produtos à tabela
+    let products = [];
+    document.querySelector('.add-product').addEventListener('click', function() {
+      const productRow = this.closest('.columns');
+      const productName = productRow.querySelector('input[type="text"]').value;
+      const productQty = productRow.querySelector('input[type="number"]').value;
+      const productValue = productRow.querySelector('.product-value').value.replace("R$ ", "").replace(".", "").replace(",", ".");
+      
+      if (!productName || !productQty || !productValue) {
+        alert("Por favor, preencha todos os campos do produto.");
+        return;
+      }
+
+      const total = (parseFloat(productValue) * parseInt(productQty)).toFixed(2);
+      products.push({ name: productName, qty: productQty, unitPrice: parseFloat(productValue).toFixed(2), total: total });
+
+      const productTable = document.getElementById('productsTable');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${productName}</td>
+        <td>${productQty}</td>
+        <td>R$ ${parseFloat(productValue).toFixed(2)}</td>
+        <td>R$ ${total}</td>
+      `;
+      productTable.appendChild(row);
+    });
+
+    // Função para gerar o PDF e salvar o recibo no banco
+    document.getElementById("reciboForm").addEventListener("submit", function(e) {
+      e.preventDefault(); // Evita o envio padrão do formulário
+
+      // Captura dos dados do formulário
+      var nomeCliente = document.getElementById("nomeCliente").value;
+      var cpfCliente = document.getElementById("cpfCliente").value;
+      var telefoneCliente = document.getElementById("telefoneCliente").value;
+      var dataRecibo = document.getElementById("dataRecibo").value;
+
+      // Captura dos valores dos checkboxes
+      var topoBolo = document.getElementById("topoBolo").checked ? 25 : 0;
+      var entrega = document.getElementById("entrega").checked ? 35 : 0;
+
+      // Verificação simples dos campos
+      if (!nomeCliente || !cpfCliente || !telefoneCliente || !dataRecibo || products.length === 0) {
+        alert("Por favor, preencha todos os campos e adicione pelo menos um produto!");
+        return;
+      }
+
+      // Inicializa o jsPDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Título "RECIBO" em negrito
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#ff3690");
+      doc.text("RECIBO", 105, 15, null, null, "center");
+
+      // Subtítulo "Robinha Cake Designer"
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#000000");
+      doc.text("Robinha Cake Designer", 105, 25, null, null, "center");
+
+      // Dados do cliente formatados como h3
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text(`Nome do Cliente: ${nomeCliente}`, 10, 40);
+      doc.text(`CPF do Cliente: ${cpfCliente}`, 10, 50);
+      doc.text(`Telefone do Cliente: ${telefoneCliente}`, 10, 60);
+      doc.text(`Data: ${new Date(dataRecibo).toLocaleDateString()}`, 10, 70);
+
+      // Tabela de produtos
+      let tableBody = products.map(prod => [prod.qty, prod.name, `R$ ${prod.unitPrice}`, `R$ ${prod.total}`]);
+
+      // Adicionar Topo de Bolo e Entrega, se marcados
+      if (topoBolo > 0) {
+        tableBody.push([1, "Topo de Bolo", `R$ 25.00`, `R$ 25.00`]);
+      }
+      if (entrega > 0) {
+        tableBody.push([1, "Entrega", `R$ 35.00`, `R$ 35.00`]);
+      }
+
+      doc.autoTable({
+        startY: 80,
+        head: [['Qtd', 'Descrição', 'Preço por Unidade (R$)', 'Valor Total (R$)']],
+        body: tableBody,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [255, 54, 144], // cor de fundo #ff3690
+          textColor: [255, 255, 255] // cor do texto branco
+        },
+        styles: {
+          fontSize: 12,
+          halign: 'center',
+          valign: 'middle'
+        }
+      });
+
+      // Calcular o total final
+      let totalFinal = products.reduce((sum, prod) => sum + parseFloat(prod.total), 0) + topoBolo + entrega;
+
+      // Exibir valor total como h1, negrito e alinhado à direita
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor("#000000");
+      doc.text(`Total: R$ ${totalFinal.toFixed(2)}`, 200, doc.lastAutoTable.finalY + 20, null, null, "right");
+
+      // Salva o PDF com o nome do cliente
+      doc.save(`recibo_${nomeCliente}.pdf`);
+
+      // Salvar o recibo no banco de dados (localStorage)
+      bancoRecibos.push({
+        nomeCliente: nomeCliente,
+        data: new Date(dataRecibo).toLocaleDateString(),
+        valor: totalFinal.toFixed(2)
+      });
+      localStorage.setItem('bancoRecibos', JSON.stringify(bancoRecibos));
+    });
+
+    // Inicialmente, exibir a página de gerar recibo
+    mostrarPagina('gerarRecibo');
+  </script>
+</body>
+</html>
